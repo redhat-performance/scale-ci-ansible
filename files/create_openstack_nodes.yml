@@ -37,7 +37,7 @@
     - name: Checking the begin and end variables
       fail:
         msg: "Begin {{ begin }} is greater than end {{ end }}."
-      when: begin > end
+      when: begin|int > end|int
 
     # Calculate how many nodes this script is adding.
     - name: Calculating how many nodes to add
