@@ -112,7 +112,7 @@
     - name: Write out the floating ips of the new nodes
       lineinfile:
         line: '{{ item }} openshift_node_labels="{"region": "primary"}"'
-        path: "{{ ansible_usr_dir }}/{{ new_nodes_inventory }}"
+        path: "{{ ansible_user_dir }}/{{ new_nodes_inventory }}"
         insertafter: EOF
       with_items: "{{ addresses['results'] }}"
 
