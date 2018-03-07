@@ -1,0 +1,142 @@
+---
+# This playbook must be run on the openstack-server.
+- name: A playbook that creates OpenShift application nodes
+  hosts: localhost
+  vars_files:
+    - "../group_vars/all.yml"
+    - "../vars/openstack.yml"
+    - "../vars/openshift.yml"
+  vars:
+    # The domain to use for the names, and openstack objects.
+    dns_domain: "example.com"
+    # The flavor to use for the node VMs.
+    node_flavor: "node_large"
+    # The image to use for the node VMs.
+    node_image: "{{ virtual_image_name }}"
+    # The prefix to use when naming the VMs.
+    node_name_prefix: "app-node"
+    # Create a variable for openshift-ansible-scale-ci.example.com
+    o_a_prefix: "openshift-ansible-{{ openshift_env_id }}.{{ dns_domain }}"
+    # Get the RC file from the environment, or the user's home directory by default.
+    openstack_rc: "{{ lookup('env', 'openstack_rc_path')|default(ansible_user_dir ~ '/overcloudrc', true) }}"
+    # The security groups to put the nodes in.
+    sec_groups: [ "{{ o_a_prefix }}-common-secgrp", "{{ o_a_prefix }}-node-secgrp" ]
+    # The zone is the env_id.domain (scale-ci.example.com).
+    zone: "{{ openshift_env_id }}.{{ dns_domain }}"
+  vars_prompt:
+    - name: "begin"
+      prompt: "Begin at what node number? "
+      default: 3
+      private: no
+    - name: "end"
+      prompt: "End at what node number? "
+      default: 5
+      private: no
+  tasks:
+    # Fail if the begin and end are not correct.
+    - name: Checking the begin and end variables
+      fail:
+        msg: "Begin {{ begin }} is greater than end {{ end }}."
+      when: begin|int > end|int
+
+    # Calculate how many nodes this script is adding.
+    - name: Calculating how many nodes to add
+      set_fact:
+        new_node_num: "{{ end|int - begin|int }}"
+
+    # Create a variable that sources rc file and has the ansible-playbook command.
+    - name: Setting the ansible-playbook variable
+      set_fact:
+        ansible_playbook: ". {{ openstack_rc }}; ansible-playbook"
+
+
+    # Create a variable that sources rc file and has the OpenStack client command.
+    - name: Setting the openstack client variable
+      set_fact:
+        openstack: ". {{ openstack_rc }}; openstack"
+
+    # Get the openshift-ansible network UUID
+    - name: Getting the openshift-ansible network UUID
+      shell: "{{ openstack }} network show {{ o_a_prefix }}-net --format value -c id"
+      register: network_result
+      changed_when: false
+
+    # Create the virtual machines with the right security groups and properties.
+    - name: Creating virtual machines in OpenStack
+      shell: >
+        {{ openstack }} server create
+        --flavor {{ node_flavor }}
+        --image {{ node_image }}
+        --security-group {{ sec_groups[0] }}
+        --security-group {{ sec_groups[1] }}
+        --property 'clusterid={{ zone }}'
+        --property 'environment={{ dns_domain }}'
+        --property 'group=nodes.{{ zone }}'
+        --property 'host-type=node'
+        --property 'node_labels={"region": "primary"}'
+        --property 'openshift_hostname={{ node_name_prefix }}-{{ item }}.{{ zone }}'
+        --property 'sub-host-type=app'
+        --property 'scaling_done_by={{ ansible_user }}@{{ inventory_hostname }}:{{ playbook_dir }}/create_openstack_nodes.yml'
+        --key-name {{ openstack_keypair_name }}
+        --nic 'net-id={{ network_result['stdout'] }}'
+        {{ node_name_prefix }}-{{ item }}.{{ zone }}
+        --format value -c id
+        --wait
+      with_sequence: "start={{ begin }} end={{ end }}"
+      register: server_uuids
+
+    # Create a floating ip for each server.
+    - name: Create the floating IPs in OpenStack
+      shell: "{{ openstack }} floating ip create {{ openstack_public_network_name }} --format value -c floating_ip_address"
+      with_sequence: "start={{ begin }} end={{ end }}"
+      register: addresses
+
+    # Add a floating ip to each server.
+    - name: Add the floating IPs to the servers
+      shell: "{{ openstack }} server add floating ip {{ item[0]['stdout']|trim }} {{ item[1]['stdout'] }}"
+      with_together:
+        - "{{ server_uuids['results'] }}"
+        - "{{ addresses['results'] }}"
+
+    - name: Creating a inventory file name
+      set_fact:
+        new_nodes_inventory: "new_nodes_{{ begin }}-{{ end }}_inventory.txt"
+
+    # Write the new nodes to a file.
+    - name: Writing a new nodes inventory file
+      copy:
+        content: "[new_nodes]"
+        dest: "{{ ansible_user_dir }}/{{ new_nodes_inventory }}"
+
+    # Add the lines if they do not already exist. Do not need regexp.
+    - name: Write out the floating ips of the new nodes
+      lineinfile:
+        line: '{{ item }} openshift_node_labels="{"region": "primary"}"'
+        path: "{{ ansible_user_dir }}/{{ new_nodes_inventory }}"
+        insertafter: EOF
+      with_items: "{{ addresses['results'] }}"
+
+    # Create a fact with the path to openshift-ansible/playbooks
+    - name: Creating a variable to the openshift-ansible/playbooks directory
+      set_fact:
+        openshift_ansible_playbooks: "{{ ansible_user_dir }}/openshift-ansible/playbooks"
+
+    # Create a fact with the path to openshift-ansible/playbooks
+    - name: Creating a variable to the OpenShift scaleup log file
+      set_fact:
+        openshift_scaleup_log: "{{ ansible_user_dir }}/openshift_scaleup.log"
+
+    # TODO: Run the openshift scaleup.yml playbook
+    - name: Run the openshift scaleup playbook
+      debug:
+        msg: "Run the playbook: {{ openshift_ansible_playbooks }}/openshift-node/scaleup.yml"
+
+    # TODO: run nsupdate with the name and the private ip
+    - name: Updating the DNS with these new nodes.
+      debug:
+        msg: "Remember to run the nsupdate for these nodes"
+
+    # TODO: Update the chrony.conf file on this node.
+    - name: Updating the time servers on the new nodes
+      debug:
+        msg: "Remember to run the chrony update on these nodes"
