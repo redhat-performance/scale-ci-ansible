@@ -1,4 +1,26 @@
 ---
+# Run the dynamic inventory to get the current app hosts.
+- name: Running the dynamic inventory file to get the current app hosts
+  shell: ". {{ openstack_rc }}; python {{ inventory_py }} | jq '.app.hosts|length'"
+  register: output
+  changed_when: false
+
+# Get the number of nodes in the app.hosts group.
+- name: Setting the current node count
+  set_fact:
+    current_node_count: "{{ output['sdtout'] }}"
+
+# Exit if the node target is less than how many nodes that are already running.
+- fail:
+    msg: "The OpenShift node target {{ openshift_node_target }} is less than or equal to than the current node count {{ current_node_count }}"
+  when: openshift_node_target | int <= current_node_count | int
+
+#  Create the blocks for scaling.
+- name: Creating begin and end blocks for scaling
+  set_fact:
+    blocks: "{{ blocks }} [{'begin': {{ item }}, 'end': {{ (item|int + block_size|int < openshift_node_target|int)|ternary(item|int + block_size|int - 1, openshift_node_target|int - 1) }} }]"
+  with_sequence: "start={{ current_node_count }} end={{ openshift_node_target|int - 1 }} stride={{ block_size }}"
+
 # Create a variable that sources the rc file and runs the ansible-playbook command.
 - name: Creating a variable that sources the OpenStack rc file and runs the ansible-playbook command
   set_fact:
@@ -14,118 +36,13 @@
   set_fact:
     openstack: ". {{ openstack_rc }}; openstack"
 
-# Run the dynamic inventory to get the current hosts in JSON format.
-- name: Running the dynamic inventory file to get the current hosts in JSON format
-  shell: ". {{ openstack_rc }}; python {{ inventory_py }}"
-  register: output
-  changed_when: false
+- name: Get the DNS information
+  include_tasks: dns.yml
 
-# Parse the JSON from the standard output from the previous command.
-- name: Creating variable from the JSON output of the last command
-  set_fact:
-    dynamic_inventory: "{{ output['stdout'] | from_json }}"
-
-# Get the number of nodes in the app.hosts group.
-- name: Setting the current node count
-  set_fact:
-    current_node_count: "{{ dynamic_inventory['app']['hosts'] | length }}"
-
-# Exit if the node target is less than how many nodes that are already running.
-- fail:
-    msg: "The OpenShift node target {{ openshift_node_target }} is less than or equal to than the current node count {{ current_node_count }}"
-  when: openshift_node_target | int <= current_node_count | int
-
-# Find the difference between node target and current nodes.
-- name: Calculating the difference
-  set_fact:
-    difference: "{{ openshift_node_target | int - current_node_count | int }}"
-
-# The current node count is the starting node number.
-- name: Setting the start number
-  set_fact:
-    start_node_number: "{{ current_node_count }}"
-
-# The current node count + difference - 1 is the ending node number.
-- name: Setting the end number
-  set_fact:
-    end_node_number: "{{ current_node_count | int + difference | int - 1 }}"
-
-# Create the new nodes inventory file name
-- name: Creating the file name for the new nodes inventory
-  set_fact:
-    new_nodes_inventory: "{{ ansible_user_dir }}/new_nodes_{{ start_node_number }}-{{ end_node_number }}_inventory"
-
-# Search for regular expressions and replace in file.
-- name: Replacing specific lines in {{ all_yml_path }}
-  lineinfile:
-    path: "{{ all_yml_path }}"
-    regexp: "{{ item['find'] }}"
-    line: "{{ item['replace'] }}"
-  with_items:
-    - { find: "^#?openshift_openstack_num_nodes.*", replace: "openshift_openstack_num_nodes: {{ openshift_node_target }}" }
-
-# Run the Ansible playbook that creates the OpenStack resources.
-- name: Creating the OpenStack resources
-#  shell: "{{ ansible_playbook }} -vvv --user openshift -i inventory -i {{ inventory_py }} {{ openshift_cluster_directory }}/provision.yml -e openshift_repos_enable_testing=true 2>&1 > {{ openstack_scaleup_log }}"
-  shell: >
-    {{ ansible_playbook }} -vvv
-    --user openshift
-    -i inventory
-    -i {{ inventory_py }}
-    {{ openshift_cluster_directory }}/provision.yml 2>&1 >> {{ openstack_scaleup_log }}
-  args:
-    # Use bash to get the posix style redirects.
-    executable: /bin/bash
-
-# Get the new OpenStack VMs by name.
-- name: Getting the new OpenStack VM network information by name
-  shell: "{{ openstack }} server list --name app-node-{{ item }}.{{ clusterid }}.{{ dns_domain }} --format value -c Networks"
-  with_sequence: "start={{ start_node_number }} end={{ end_node_number }}"
-  register: networks
-
-- name: Create an empty list.
-  set_fact:
-    addresses: []
-
-# Create a list of addresses from the standard output of the last commands.
-- name: Creating a list of addresses from the OpenStack networks output
-  set_fact:
-    addresses: "{{ addresses }} + ['{{ item['stdout'].split(', ')[1] }}' ]"
-  with_items: "{{ networks['results'] }}"
-
-# Write the group name for the new nodes inventory file.
-- name: Writing the group header for the new nodes inventory file
-  copy:
-    content: "[OSEv3:children]\nnew_nodes\n[new_nodes]\n"
-    dest: "{{ new_nodes_inventory }}"
-
-# Create the new inventory file
-- name: Adding the addresses to the new nodes inventory file
-  lineinfile:
-    path: "{{ new_nodes_inventory }}"
-    line: "{{ item }} openshift_node_labels=\"{'region': 'primary'}\""
-  with_items: "{{ addresses }}"
-
-# Configure the time servers on all the new nodes.
-- name: Configuring the time servers on all the new nodes
-  shell: >
-    {{ ansible_playbook }} -vvv
-    --user openshift
-    -i {{ new_nodes_inventory }}
-    configure_time_servers.yml 2>&1 >> {{ ansible_user_dir }}/time_servers.log
-  args:
-    # Use bash to get the posix style redirects.
-    executable: /bin/bash
-
-# Scale up the OpenShift cluster.
-- name: Scaling up the OpenShift resources
-  shell: >
-    {{ ansible_playbook_scaleup }} -vvv
-    --user openshift
-    -i inventory/
-    -i {{ inventory_py }}
-    -i {{ new_nodes_inventory }}
-    {{ openshift_node_directory }}/scaleup.yml 2>&1 >> {{ openshift_scaleup_log }}
-  args:
-    # Use bash to get the posix style redirects.
-    executable: /bin/bash
+# Scale up this block of nodes.
+- name: Scale loop
+  include_tasks: scaleup.yml
+  with_items: "{{ blocks }}"
+  loop_control:
+    # The loop_var changes the varabile name from item to avoid name collisions.
+    loop_var: block
