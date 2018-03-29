@@ -1,0 +1,112 @@
+---
+# Get the new OpenStack networks by name.
+- name: Getting the new OpenStack VM network information by name
+  shell: "{{ openstack }} server list --name app-node-{{ item }}.{{ clusterid }}.{{ dns_domain }} --format value -c Name -c Networks"
+  with_sequence: "start={{ block['begin'] }} end={{ block['end'] }}"
+  register: networks
+
+# Create an empty dictionary for the node data.
+- name: Creating an empty dictionary
+  set_fact:
+    nodes_data: []
+
+# Parse the networks results standard output.
+- name: Parsing the network output
+  set_fact:
+    # Example: app-node-85.scale-ci.example.com openshift-ansible-scale-ci.example.com-net=192.168.96.18, 172.21.0.135
+    nodes_data: >
+      {{ nodes_data }} + [{
+      'address': '{{ item['stdout'].split(', ')[1] }}',
+      'name': '{{ item['stdout'].split(' ')[0].split('.')[0] }}',
+      'ipv4_private': '{{ item['stdout'].split('=')[1].split(', ')[0] }}' }]
+  with_items: "{{ networks['results'] }}"
+
+# Search for regular expressions and replace in file.
+- name: Replacing specific lines in {{ all_yml_path }}
+  lineinfile:
+    path: "{{ all_yml_path }}"
+    regexp: "{{ item['find'] }}"
+    line: "{{ item['replace'] }}"
+  with_items:
+    - { find: "^#?openshift_openstack_num_nodes.*", replace: "openshift_openstack_num_nodes: {{ block['end']|int + 1 }}" }
+
+# Create the OpenStack scaleup logfile name.
+- name: Creating the file name for the OpenStack scale up log file
+  set_fact:
+    openstack_scaleup_log: "{{ ansible_user_dir }}/openstack_scaleup_{{ block['end']|int + 1 }}_inventory"
+
+# Run the Ansible playbook that creates the OpenStack resources.
+- name: Creating the OpenStack resources
+  shell: >
+    {{ ansible_playbook }} -vv
+    --user openshift
+    -i inventory
+    -i {{ inventory_py }}
+    {{ openshift_cluster_directory }}/provision_resources.yml 2>&1 >> {{ openstack_scaleup_log }}
+  args:
+    # Use bash to get the posix style redirects.
+    executable: /bin/bash
+
+# Create the new nodes inventory file name
+- name: Creating the file name for the new nodes inventory
+  set_fact:
+    new_nodes_inventory: "{{ ansible_user_dir }}/new_nodes_{{ block['begin'] }}-{{ block['end'] }}_inventory"
+
+# Write the group name for the new nodes inventory file.
+- name: Writing the group header for the new nodes inventory file
+  copy:
+    content: "[OSEv3:children]\nnew_nodes\n[new_nodes]\n"
+    dest: "{{ new_nodes_inventory }}"
+
+# Create the new inventory file
+- name: Adding the addresses to the new nodes inventory file
+  lineinfile:
+    path: "{{ new_nodes_inventory }}"
+    line: "{{ item['addresses'] }} openshift_node_labels=\"{'region': 'primary'}\""
+  with_items: "{{ nodes_data }}"
+
+# Configure the time servers on all the new nodes.
+- name: Configuring the time servers on all the new nodes
+  shell: >
+    {{ ansible_playbook }} -vv
+    --user openshift
+    -i {{ new_nodes_inventory }}
+    configure_time_servers.yml 2>&1 >> {{ timeservers_log }}
+  args:
+    # Use bash to get the posix style redirects.
+    executable: /bin/bash
+
+- name: Creating DNS records for the new OpenStack VMs
+  nsupdate:
+    key_name: "{{ dns_key_name }}"
+    key_secret: "{{ dns_key_secret }}"
+    key_algorithm: "{{ dns_key_algorithm }}"
+    server: "{{ cluster_dns_ip }}"
+    zone: "{{ clusterid }}.{{ dns_domain }}"
+    record: "{{ item['name'] }}"
+    type: "A"
+    value: "{{ item['ipv4_private'] }}"
+    state: present
+  with_items:
+    - "{{ node data }}"
+  register: nsupdate_add_result
+  until: nsupdate_add_result is succeeded
+  retries: 10
+
+# Create the path to the OpenShift scale up log file.
+- name: Creating the file name for the OpenStack scale up log file
+  set_fact:
+    openshift_scaleup_log: "{{ ansible_user_dir }}/openshift_scaleup-{{ block['end']|int + 1 }}.log"
+
+# Scale up the OpenShift cluster.
+- name: Scaling up the OpenShift resources
+  shell: >
+    {{ ansible_playbook_scaleup }} -vv
+    --user openshift
+    -i inventory/
+    -i {{ inventory_py }}
+    -i {{ new_nodes_inventory }}
+    {{ openshift_node_directory }}/scaleup.yml 2>&1 >> {{ openshift_scaleup_log }}
+  args:
+    # Use bash to get the posix style redirects.
+    executable: /bin/bash
