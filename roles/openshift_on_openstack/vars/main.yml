@@ -17,3 +17,7 @@ openstack_rc: "{{ lookup('env', 'openstack_rc_path')|default(ansible_user_dir ~ 
 registries: "{{ openshift_registries.split(' ') }}"
 # Clone openshift-ansible repository rather than copying /root/openshift-ansible
 openshift_ansible_clone: "{{ lookup('env', 'openshift_ansible_clone')|default(false, true) }}"
+# Pbench analyzer inventory file
+pbcompare_inventory: /root/svt/utils/pbwedge/hosts
+# Pbench analyzer playbook
+pbcompare_playbook: /root/svt/utils/pbwedge/main.yml

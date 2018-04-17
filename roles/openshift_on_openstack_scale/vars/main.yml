@@ -17,3 +17,7 @@ openshift_cluster_directory: "{{ ansible_user_dir }}/openshift-ansible/playbooks
 openshift_node_directory: "{{ ansible_user_dir }}/openshift-ansible/playbooks/openshift-node"
 # The path to the OpenStack RC file on the server vm, may be named differently than other servers.
 openstack_rc: "{{ lookup('env', 'openstack_rc_path')|default(ansible_user_dir ~ '/keystonerc', true) }}"
+# Pbench analyzer inventory file
+pbcompare_inventory: /root/svt/utils/pbwedge/hosts
+# Pbench analyzer playbook
+pbcompare_playbook: /root/svt/utils/pbwedge/main.yml
