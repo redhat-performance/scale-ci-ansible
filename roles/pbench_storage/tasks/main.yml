@@ -29,3 +29,9 @@
     fstype: xfs
     state: mounted
   become: yes
+
+- name: Creating Pbench agent config
+  template:
+    src: pbench-agent.cfg.j2
+    dest: /opt/pbench-agent/config/pbench-agent.cfg
+  become: yes

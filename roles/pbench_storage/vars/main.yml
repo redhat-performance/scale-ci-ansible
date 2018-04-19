@@ -5,3 +5,7 @@ pbench_storage_device: '/dev/vda'
 pbench_storage_device_partition: 3
 # Pbench agent default directory.
 pbench_storage_mount_path: '/var/lib/pbench-agent'
+# Pbench results redirector host.
+pbench_results_redirector: 'pbench.perf.lab.eng.bos.redhat.com'
+# Pbench web server host.
+pbench_web_server: '{{ pbench_results_redirector }}'
