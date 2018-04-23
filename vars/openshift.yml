@@ -12,4 +12,4 @@ openshift_default_flavor: "{{ lookup('env', 'openshift_default_flavor')|default(
 # The flavor to use for the OpenShift nodes.
 openshift_node_flavor: "{{ lookup('env', 'openshift_node_flavor')|default('node_large', true) }}"
 # Get the number of OpenShift nodes to scale to.
-openshift_node_target: "{{ lookup('env', 'OPENSHIFT_NODE_TARGET') | default(2, true) }}"
+openshift_node_target: "{{ lookup('env', 'OPENSHIFT_NODE_TARGET') | default(4, true) }}"
