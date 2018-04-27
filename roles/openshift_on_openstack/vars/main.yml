@@ -21,5 +21,3 @@ openshift_ansible_clone: "{{ lookup('env', 'openshift_ansible_clone')|default(fa
 pbcompare_inventory: /root/svt/utils/pbwedge/hosts
 # Pbench analyzer playbook
 pbcompare_playbook: /root/svt/utils/pbwedge/main.yml
-# Github token
-pbcompare_github_token: "{{ lookup('env', 'pbcompare_github_token') }}"

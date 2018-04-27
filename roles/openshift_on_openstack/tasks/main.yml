@@ -287,7 +287,7 @@
 # Run the Ansible playbook that installs OpenShift.
 - name: Installing OpenShift on OpenStack
   # Using two inventory flags here as the README instructs.
-  shell: pbench-user-benchmark --pbench-post='/usr/local/bin/pbscraper -i $benchmark_results_dir/tools-default -o $benchmark_results_dir; ansible-playbook -vv -i {{ pbcompare_inventory }} {{ pbcompare_playbook }} -e \'new_file='$benchmark_results_dir/out.json'' -e \'github_token={{ pbcompare_github_token }}'' -- {{ ansible_playbook }} -vvv --user openshift -i inventory -i {{ inventory_py }} {{ openshift_openstack_dir }}/openshift-cluster/install.yml 2>&1 >> {{ openshift_install_log }}
+  shell: pbench-user-benchmark --pbench-post='/usr/local/bin/pbscraper -i $benchmark_results_dir/tools-default -o $benchmark_results_dir; ansible-playbook -vv -i {{ pbcompare_inventory }} {{ pbcompare_playbook }} -e \'new_file='$benchmark_results_dir/out.json''' -- {{ ansible_playbook }} -vvv --user openshift -i inventory -i {{ inventory_py }} {{ openshift_openstack_dir }}/openshift-cluster/install.yml 2>&1 >> {{ openshift_install_log }}
   args:
     # Use bash to get the posix style redirects.
     executable: /bin/bash
