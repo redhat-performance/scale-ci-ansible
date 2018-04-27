@@ -105,7 +105,13 @@
 # Scale up the OpenShift cluster.
 - name: Scaling up the OpenShift resources
   shell: >
-    {{ ansible_playbook_scaleup }} -vv
+    pbench-user-benchmark
+    --pbench-post='/usr/local/bin/pbscraper
+    -i $benchmark_results_dir/tools-default
+    -o $benchmark_results_dir;
+    ansible-playbook -i {{ pbcompare_inventory }} {{ pbcompare_playbook }}
+    -e \'new_file='$benchmark_results_dir/out.json'' -e \'github_token={{ pbcompare_github_token }}''
+    -- {{ ansible_playbook_scaleup }} -vv
     --user openshift
     -i inventory/
     -i {{ inventory_py }}

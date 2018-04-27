@@ -1,0 +1,3 @@
+---
+- name: move pbench results gathered for openshift install and scaleup runs to the pbench-server
+  shell: pbench-move-results
