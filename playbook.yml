@@ -61,3 +61,4 @@
     - openstack_etc_hosts
     - jenkins_pipeline
     - openshift_label_nodes
+    - openshift_move_run_results
