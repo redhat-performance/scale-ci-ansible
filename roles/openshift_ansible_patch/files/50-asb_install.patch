@@ -1,0 +1,18 @@
+--- openshift-ansible.orig/roles/ansible_service_broker/tasks/install.yml
++++ openshift-ansible/roles/ansible_service_broker/tasks/install.yml
+@@ -116,6 +116,15 @@
+ - set_fact:
+     service_ca_crt: "{{ asb_client_secret.results.results.0.data['service-ca.crt'] }}"
+ 
++- name: Debug
++  debug:
++    msg: '{{ crd }}'
++  vars:
++    crd: "{{ lookup('file', item) | from_yaml }}"
++  with_fileglob:
++    - 'files/*.automationbroker.io.yaml'
++
++
+ - name: Create custom resource definitions for asb
+   oc_obj:
+     name: '{{ crd.metadata.name }}'
