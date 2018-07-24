@@ -102,6 +102,19 @@
     # Use bash to get the posix style redirects.
     executable: /bin/bash
 
+# Run through the few OpenStack specific configuration.
+- name: Configuring new nodes
+  shell: >
+    {{ ansible_playbook }} -vv
+    --user openshift
+    -i {{ inventory_py }}
+    -i {{ new_nodes_inventory }}
+    -i inventory/
+    {{ openshift_cluster_directory }}/configure-new-nodes.yml 2>&1 >> configure_new_nodes_{{ block['end'] }}.log
+  args:
+    # Use bash to get the posix style redirects.
+    executable: /bin/bash
+
 # Scale up the OpenShift cluster.
 - name: Scaling up the OpenShift resources
   shell: >
