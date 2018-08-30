@@ -29,3 +29,9 @@ registries: "{{ openshift_registries.split(' ') }}"
 service_catalog_enable: "{{ lookup('env', 'service_catalog_enable')|default(true, true) }}"
 # Enable template service broker (requires service catalog to be enabled)
 template_service_broker_enable: "{{ lookup('env', 'template_service_broker_enable')|default(true, true) }}"
+# Pbench analyzer inventory file
+pbcompare_inventory: /root/svt/utils/pbwedge/hosts
+# Pbench analyzer playbook
+pbcompare_playbook: /root/svt/utils/pbwedge/main.yml
+# Monitor the install using pbench
+use_pbench: False

@@ -176,6 +176,25 @@
       args:
         # Use bash to get the posix style redirects.
         executable: /bin/bash
+
+    - name: Scaling up the OpenShift resources and monitor using pbench
+      shell: >
+        pbench-user-benchmark
+        --pbench-post='/usr/local/bin/pbscraper
+        -i $benchmark_results_dir/tools-default
+        -o $benchmark_results_dir;
+        ansible-playbook -i {{ pbcompare_inventory }} {{ pbcompare_playbook }}
+        -e new_file='$benchmark_results_dir/out.json''
+        -- {{ ansible_playbook_scaleup }} -vv
+        --user openshift
+        -i inventory/
+        -i {{ scaleup_inventory_py }}
+        -i {{ new_nodes_inventory }}
+        {{ openshift_cluster_directory }}/node-scaleup.yml 2>&1 >> {{ scaleup_openshift_log }}
+      args:
+        # Use bash to get the posix style redirects.
+        executable: /bin/bash
+      when: use_pbench | default(False) | bool
   always:
     - name: Copy the log file to the artifacts directory
       synchronize:

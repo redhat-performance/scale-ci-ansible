@@ -70,6 +70,7 @@
     - openstack_etc_hosts
     - openshift_label_nodes
     - pbench_web_server
+    - openshift_move_results
 
 - name: Copy the certs to the location where golang looks for
   hosts: masters

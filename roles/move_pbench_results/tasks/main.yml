@@ -1,0 +1,3 @@
+---
+- name: copy pbench results to the server
+  shell: pbench-move-results

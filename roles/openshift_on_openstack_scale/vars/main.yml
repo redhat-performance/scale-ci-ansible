@@ -15,3 +15,9 @@ inventory_py: "{{ ansible_user_dir }}/openshift-ansible/playbooks/openstack/inve
 openshift_cluster_directory: "{{ ansible_user_dir }}/openshift-ansible/playbooks/openstack/openshift-cluster"
 # The path to the OpenStack RC file on the server vm, may be named differently than other servers.
 openstack_rc: "{{ lookup('env', 'openstack_rc_path')|default(ansible_user_dir ~ '/keystonerc', true) }}"
+# Pbench analyzer inventory file
+pbcompare_inventory: /root/svt/utils/pbwedge/hosts
+# Pbench analyzer playbook
+pbcompare_playbook: /root/svt/utils/pbwedge/main.yml
+# Monitor the scaleup using pbench
+use_pbench: False
