@@ -3,6 +3,15 @@
 # Installs OpenShift Metering
 #
 
+- name: Copy the service monitor files to remote host
+  copy:
+    src: "{{ item }}"
+    dest: "{{ ansible_user_dir }}/"
+  with_items:
+    - presto-service-monitor.yaml
+    - reporting-operator-service-monitor.yaml
+    - role-and-binding-openshift-metering-ns.yaml
+
 - name: Install OpenShift Metering block_device
   block:
     - name: Add OpenShift Metering variables
@@ -20,4 +29,19 @@
       synchronize:
         src: "{{log_directory}}/openshift_metering_install.log"
         dest: "{{artifacts_directory}}"
+        mode: pull
+
+- name: Create the OpenShift service montior objects
+  block:
+    - name: Create the service monitor objects after metering is installed
+      shell: "oc create -f {{ item }} 2>&1 | tee -a {{ log_directory }}/openshift_service_monitor.log"
+      with_items:
+        - presto-service-monitor.yaml
+        - reporting-operator-service-monitor.yaml
+        - role-and-binding-openshift-metering-ns.yaml
+  always:
+    - name: Collect OpenShift service monitor output
+      synchronize:
+        src: "{{ log_directory }}/openshift_service_monitor.log"
+        dest: "{{ artifacts_directory }}"
         mode: pull
