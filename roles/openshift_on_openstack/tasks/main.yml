@@ -203,6 +203,11 @@
     mode: pull
     use_ssh_args: yes
 
+- name: Create extra inventory file with CNV Vars
+  copy:
+    src: cnv.inv
+    dest: "{{ ansible_user_dir }}/inventory/cnv.inv"
+
 # Set the path for the prerequisite log file.
 - name: Creating a variable for the prerequisite log file
   set_fact:

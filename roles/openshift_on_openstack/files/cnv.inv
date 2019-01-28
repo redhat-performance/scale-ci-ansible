@@ -1,0 +1,8 @@
+[masters:vars]
+openshift_node_group_name = node-config-master-infra-crio
+
+[nodelabelcompute:vars]
+openshift_node_group_name = node-config-compute-crio
+
+[OSEv3:vars]
+openshift_master_admission_plugin_config = {"ValidatingAdmissionWebhook":{"configuration":{"kind": "DefaultAdmissionConfig","apiVersion": "v1","disable": false}},"MutatingAdmissionWebhook":{"configuration":{"kind": "DefaultAdmissionConfig","apiVersion": "v1","disable": false}}}
