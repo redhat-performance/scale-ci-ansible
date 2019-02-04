@@ -73,3 +73,6 @@ openshift_docker_additional_registries: {{ registries|to_json }}
 openshift_docker_insecure_registries: {{ registries|to_json }}
 cli_docker_additional_registries: {{ registries|to_json }}
 cli_docker_insecure_registries: {{ registries|to_json }}
+
+# CNV Configuration
+openshift_use_crio: true
