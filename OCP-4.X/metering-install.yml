@@ -1,0 +1,57 @@
+---
+#
+# Installs metering on a RHCOS cluster
+#
+
+- name: Installs Metering on a RHCOS cluster
+  hosts: orchestration
+  gather_facts: false
+  remote_user: "{{orchestration_user}}"
+  vars_files:
+    - vars/metering-install.yml
+  tasks:
+    - name: Create metering install directory
+      file:
+        path: metering-install
+        state: directory
+
+    - name: Copy metering install yaml files
+      copy:
+        src: files/{{item}}
+        dest: metering-install/{{item}}
+      with_items:
+        - metering.catalogsourceconfig.yml
+        - metering.operatorgroup.yml
+        - metering.subscription.yml
+
+    - name: Template metering install yaml
+      template:
+        src: templates/metering.yml.j2
+        dest: metering-install/metering.yml
+
+    - name: Create Metering namespace
+      shell: |
+        oc create ns openshift-metering
+
+    - name: Create Catalog Source Config
+      shell: |
+        oc apply -n openshift-marketplace -f metering-install/metering.catalogsourceconfig.yml
+
+    - name: Create Metering Operator Group
+      shell: |
+        oc -n openshift-metering apply -f metering-install/metering.operatorgroup.yml
+
+    - name: Create Metering Subscription
+      shell: |
+        oc -n openshift-metering apply -f metering-install/metering.subscription.yml
+
+    - name: Poll openshift-metering for the operator running
+      shell: oc -n openshift-metering get pods | grep Running -ic
+      register: metering_running
+      until: metering_running.stdout|int > 0
+      delay: 1
+      retries: 200
+
+    - name: Create the Metering Object
+      shell: |
+        oc -n openshift-metering apply -f metering-install/metering.yml

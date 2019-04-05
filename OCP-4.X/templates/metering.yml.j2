@@ -1,0 +1,113 @@
+apiVersion: metering.openshift.io/v1alpha1
+kind: Metering
+metadata:
+  name: "operator-metering"
+spec:
+  reporting-operator:
+    spec:
+{% if metering_nodeselector_infra %}
+      nodeSelector:
+        "node-role.kubernetes.io/infra": ""
+{% endif %}
+      resources:
+        requests:
+          memory: "{{metering_reporting_operator_requests_mem}}"
+          cpu: "{{metering_reporting_operator_requests_cpu}}"
+        limits:
+          memory: "{{metering_reporting_operator_limits_mem}}"
+          cpu: "{{metering_reporting_operator_limits_cpu}}"
+      route:
+        enabled: true
+  presto:
+    spec:
+      presto:
+        coordinator:
+{% if metering_nodeselector_infra %}
+          nodeSelector:
+            "node-role.kubernetes.io/infra": ""
+{% endif %}
+          resources:
+            requests:
+              memory: "{{metering_presto_coordinator_requests_mem}}"
+              cpu: "{{metering_presto_coordinator_requests_cpu}}"
+            limits:
+              memory: "{{metering_presto_coordinator_limits_mem}}"
+              cpu: "{{metering_presto_coordinator_limits_cpu}}"
+        worker:
+{% if metering_nodeselector_infra %}
+          nodeSelector:
+            "node-role.kubernetes.io/infra": ""
+{% endif %}
+          replicas: {{metering_presto_worker_replica_count}}
+          resources:
+            requests:
+              memory: "{{metering_presto_worker_requests_mem}}"
+              cpu: "{{metering_presto_worker_requests_cpu}}"
+            limits:
+              memory: "{{metering_presto_worker_limits_mem}}"
+              cpu: "{{metering_presto_worker_limits_cpu}}"
+      hive:
+        metastore:
+{% if metering_nodeselector_infra %}
+          nodeSelector:
+            "node-role.kubernetes.io/infra": ""
+{% endif %}
+          resources:
+            requests:
+              memory: "{{metering_hive_metastore_requests_mem}}"
+              cpu: "{{metering_hive_metastore_requests_cpu}}"
+            limits:
+              memory: "{{metering_hive_metastore_limits_mem}}"
+              cpu: "{{metering_hive_metastore_limits_cpu}}"
+          storage:
+            create: true
+            # Default to null, which means using the default storage class
+            class: null
+            size: "{{metering_hive_metastore_storage_size}}"
+        server:
+{% if metering_nodeselector_infra %}
+          nodeSelector:
+            "node-role.kubernetes.io/infra": ""
+{% endif %}
+          resources:
+            requests:
+              memory: "{{metering_hive_server_requests_mem}}"
+              cpu: "{{metering_hive_server_requests_cpu}}"
+            limits:
+              memory: "{{metering_hive_server_limits_mem}}"
+              cpu: "{{metering_hive_server_limits_cpu}}"
+  hdfs:
+    spec:
+      datanode:
+{% if metering_nodeselector_infra %}
+        nodeSelector:
+          "node-role.kubernetes.io/infra": ""
+{% endif %}
+        replicas: "{{metering_hdfs_datanode_replica_count}}"
+        resources:
+          requests:
+            memory: "{{metering_hdfs_datanode_requests_mem}}"
+            cpu: "{{metering_hdfs_datanode_requests_cpu}}"
+          limits:
+            memory: "{{metering_hdfs_datanode_limits_mem}}"
+            cpu: "{{metering_hdfs_datanode_limits_cpu}}"
+        storage:
+          # Default to null, which means using the default storage class
+          class: null
+          size: "{{metering_hdfs_datanode_storage_size}}"
+      namenode:
+{% if metering_nodeselector_infra %}
+        nodeSelector:
+          "node-role.kubernetes.io/infra": ""
+{% endif %}
+        resources:
+          requests:
+            memory: "{{metering_hdfs_namenode_requests_mem}}"
+            cpu: "{{metering_hdfs_namenode_requests_cpu}}"
+          limits:
+            memory: "{{metering_hdfs_namenode_limits_mem}}"
+            cpu: "{{metering_hdfs_namenode_limits_cpu}}"
+        storage:
+          # Default to null, which means using the default storage class
+          class: null
+          size: "{{metering_hdfs_namenode_storage_size}}"
