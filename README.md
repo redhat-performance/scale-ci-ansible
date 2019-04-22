@@ -15,7 +15,7 @@ orchestration host can be localhost if properly setup.
 - The jump host is the node which orchestrates the ocp install and configures the nodes to support the Scale-CI pipeline.
 - Jump host needs to be a RHEL box and preferred if it is based out of the AMI built by the image provisioner.
 
-### Run
+## RHCOS Install
 Clone the github repo:
 ```
 $ git clone https://github.com/redhat-performance/scale-ci-ansible.git
@@ -31,10 +31,99 @@ Set OPENSHIFT_POST_INSTALL and OPENSHIFT_TOOLING to true to run the post-install
 the cluster to be able to run perf and scale tests using Scale-CI pipeline. The varibles under the post-install section
 of the inventory can be modified to override the default values.
 
-### Cleanup
+## RHCOS Cleanup
 Set OPENSHIFT_INSTALL, OPENSHIFT_POST_INSTALL, OPENSHIFT_TOOLING to False and OPENSHIFT_AWS_INSTALL_CLEANUP to True in the inventory and run the playbook:
 ```
 $ ansible-playbook -vv -i inventory OCP-4.X/install.yml
+```
+
+## RHCOS Tooling
+
+The RHCOS tooling playbook is `OCP-4.X/tooling.yml` and will configure pbench tooling on master, infra, and two worker nodes.
+
+Running from CLI:
+
+```sh
+$ cp OCP-4.X/inventory.example inventory
+$ # Add orchestration host to inventory
+$ # Edit vars in OCP-4.X/vars/tooling.yml or define Environment vars (See below)
+$ time ansible-playbook -vv -i inventory OCP-4.X/tooling.yml
+```
+
+### Environment variables for RHCOS tooling playbook
+
+```
+###############################################################################
+# Ansible SSH variables.
+###############################################################################
+PUBLIC_KEY
+PRIVATE_KEY
+
+ORCHESTRATION_USER
+###############################################################################
+# RHCOS tooling variables.
+###############################################################################
+PBENCH_IMAGE
+
+KUBECONFIG_FILE
+
+PBENCH_SSH_PRIVATE_KEY_FILE
+PBENCH_SSH_PUBLIC_KEY_FILE
+PBENCH_SERVER
+```
+
+## RHCOS Workload
+
+The RHCOS workload playbook is `OCP-4.X/workload.yml` and will run a workload on your RHCOS cluster.
+
+Current Workloads:
+* NodeVertical
+* Test (ssh-enabled pod to develop a workload)
+
+Running from CLI:
+
+```sh
+$ cp OCP-4.X/inventory.example inventory
+$ # Add orchestration host to inventory
+$ # Edit vars in OCP-4.X/vars/workload.yml or define Environment vars (See below)
+$ time ansible-playbook -vv -i inventory OCP-4.X/workload.yml
+```
+
+### Environment variables for RHCOS workload playbook
+
+```
+###############################################################################
+# Ansible SSH variables.
+###############################################################################
+PUBLIC_KEY
+PRIVATE_KEY
+
+ORCHESTRATION_USER
+###############################################################################
+# RHCOS workload variables.
+###############################################################################
+WORKLOAD_IMAGE
+
+WORKLOAD_JOB
+
+WORKLOAD_JOB_NODE_SELECTOR
+WORKLOAD_JOB_TAINT
+WORKLOAD_JOB_PRIVILEGED
+
+KUBECONFIG_FILE
+
+PBENCH_SSH_PRIVATE_KEY_FILE
+PBENCH_SSH_PUBLIC_KEY_FILE
+ENABLE_PBENCH_AGENTS
+PBENCH_SERVER
+
+SCALE_CI_RESULTS_TOKEN
+
+# NodeVertical workload specific parameters:
+NODEVERTICAL_MAXPODS
+NODEVERTICAL_STEPSIZE
+NODEVERTICAL_PAUSE
+NODEVERTICAL_TEST_PREFIX
 ```
 
 ## RHCOS scale
