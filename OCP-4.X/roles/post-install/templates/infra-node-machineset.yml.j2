@@ -6,8 +6,6 @@ items:
     creationTimestamp: null
     labels:
       {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-cluster: {{rhcos_cluster_name.stdout}}
-      {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-machine-role: infra
-      {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-machine-type: infra
     name: {{rhcos_cluster_name.stdout}}-infra-{{rhcos_region.stdout}}a
     namespace: openshift-machine-api
   spec:
@@ -15,6 +13,8 @@ items:
     selector:
       matchLabels:
         {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-cluster: {{rhcos_cluster_name.stdout}}
+        {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-machine-role: infra
+        {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-machine-type: infra
         {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-machineset: {{rhcos_cluster_name.stdout}}-infra-{{rhcos_region.stdout}}a
     template:
       metadata:
@@ -39,6 +39,8 @@ items:
                 iops: {{RHCOS_INFRA_NODE_VOLUME_IOPS}}
                 volumeSize: {{RHCOS_INFRA_NODE_VOLUME_SIZE}}
                 volumeType: {{RHCOS_INFRA_NODE_VOLUME_TYPE}}
+            credentialsSecret:
+              name: aws-cloud-credentials
             deviceIndex: 0
             iamInstanceProfile:
               id: {{rhcos_cluster_name.stdout}}-worker-profile
@@ -65,8 +67,6 @@ items:
               value: owned
             userDataSecret:
               name: worker-user-data
-        versions:
-          kubelet: ""
   status:
     replicas: 0
 - apiVersion: machine.openshift.io/v1beta1
@@ -75,8 +75,6 @@ items:
     creationTimestamp: null
     labels:
       {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-cluster: {{rhcos_cluster_name.stdout}}
-      {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-machine-role: infra
-      {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-machine-type: infra
     name: {{rhcos_cluster_name.stdout}}-infra-{{rhcos_region.stdout}}b
     namespace: openshift-machine-api
   spec:
@@ -84,6 +82,8 @@ items:
     selector:
       matchLabels:
         {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-cluster: {{rhcos_cluster_name.stdout}}
+        {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-machine-role: infra
+        {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-machine-type: infra
         {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-machineset: {{rhcos_cluster_name.stdout}}-infra-{{rhcos_region.stdout}}b
     template:
       metadata:
@@ -108,6 +108,8 @@ items:
                 iops: {{RHCOS_INFRA_NODE_VOLUME_IOPS}}
                 volumeSize: {{RHCOS_INFRA_NODE_VOLUME_SIZE}}
                 volumeType: {{RHCOS_INFRA_NODE_VOLUME_TYPE}}
+            credentialsSecret:
+              name: aws-cloud-credentials
             deviceIndex: 0
             iamInstanceProfile:
               id: {{rhcos_cluster_name.stdout}}-worker-profile
@@ -134,8 +136,6 @@ items:
               value: owned
             userDataSecret:
               name: worker-user-data
-        versions:
-          kubelet: ""
   status:
     replicas: 0
 - apiVersion: machine.openshift.io/v1beta1
@@ -144,8 +144,6 @@ items:
     creationTimestamp: null
     labels:
       {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-cluster: {{rhcos_cluster_name.stdout}}
-      {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-machine-role: infra
-      {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-machine-type: infra
     name: {{rhcos_cluster_name.stdout}}-infra-{{rhcos_region.stdout}}c
     namespace: openshift-machine-api
   spec:
@@ -153,6 +151,8 @@ items:
     selector:
       matchLabels:
         {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-cluster: {{rhcos_cluster_name.stdout}}
+        {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-machine-role: infra
+        {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-machine-type: infra
         {{RHCOS_METADATA_LABEL_PREFIX}}/cluster-api-machineset: {{rhcos_cluster_name.stdout}}-infra-{{rhcos_region.stdout}}c
     template:
       metadata:
@@ -177,6 +177,8 @@ items:
                 iops: {{RHCOS_INFRA_NODE_VOLUME_IOPS}}
                 volumeSize: {{RHCOS_INFRA_NODE_VOLUME_SIZE}}
                 volumeType: {{RHCOS_INFRA_NODE_VOLUME_TYPE}}
+            credentialsSecret:
+              name: aws-cloud-credentials
             deviceIndex: 0
             iamInstanceProfile:
               id: {{rhcos_cluster_name.stdout}}-worker-profile
@@ -203,8 +205,6 @@ items:
               value: owned
             userDataSecret:
               name: worker-user-data
-        versions:
-          kubelet: ""
   status:
     replicas: 0
 kind: List
