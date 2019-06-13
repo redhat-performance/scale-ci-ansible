@@ -1,3 +1,5 @@
+# Deprecated. Please see https://github.com/openshift-scale/scale-ci-deploy
+
 # scale-ci-ansible
 
 The repo contains playbooks for scale-ci automation tasks.  Those include install, scaling, upgrade,
