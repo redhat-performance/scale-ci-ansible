@@ -1,0 +1,54 @@
+---
+###############################################################################
+# Ansible SSH variables.
+###############################################################################
+ansible_public_key_file: "{{ lookup('env', 'PUBLIC_KEY')|default('~/.ssh/id_rsa.pub', true) }}"
+ansible_private_key_file: "{{ lookup('env', 'PRIVATE_KEY')|default('~/.ssh/id_rsa', true) }}"
+
+orchestration_user: "{{ lookup('env', 'ORCHESTRATION_USER')|default('root', true) }}"
+###############################################################################
+# RHCOS metering install variables.
+###############################################################################
+
+# Configure all Metering nodeselectors for infra node placement
+metering_nodeselector_infra: "{{ lookup('env', 'METERING_NODESELECTOR_INFRA')|default(true, true) }}"
+
+metering_reporting_operator_requests_mem: "{{ lookup('env', 'METERING_REPORTING_OPERATOR_REQUESTS_MEM')|default('50Mi', true) }}"
+metering_reporting_operator_requests_cpu: "{{ lookup('env', 'METERING_REPORTING_OPERATOR_REQUESTS_CPU')|default('50m', true) }}"
+metering_reporting_operator_limits_mem: "{{ lookup('env', 'METERING_REPORTING_OPERATOR_LIMITS_MEM')|default('150Mi', true) }}"
+metering_reporting_operator_limits_cpu: "{{ lookup('env', 'METERING_REPORTING_OPERATOR_LIMITS_CPU')|default('100m', true) }}"
+
+metering_presto_coordinator_requests_mem: "{{ lookup('env', 'METERING_PRESTO_COORDINATOR_REQUESTS_MEM')|default('2Gi', true) }}"
+metering_presto_coordinator_requests_cpu: "{{ lookup('env', 'METERING_PRESTO_COORDINATOR_REQUESTS_CPU')|default('500m', true) }}"
+metering_presto_coordinator_limits_mem: "{{ lookup('env', 'METERING_PRESTO_COORDINATOR_LIMITS_MEM')|default('2Gi', true) }}"
+metering_presto_coordinator_limits_cpu: "{{ lookup('env', 'METERING_PRESTO_COORDINATOR_LIMITS_CPU')|default('500m', true) }}"
+
+metering_presto_worker_replica_count: "{{ lookup('env', 'METERING_PRESTO_WORKER_REPLICAS')|default(0, true) }}"
+metering_presto_worker_requests_mem: "{{ lookup('env', 'METERING_PRESTO_WORKER_REQUESTS_MEM')|default('2Gi', true) }}"
+metering_presto_worker_requests_cpu: "{{ lookup('env', 'METERING_PRESTO_WORKER_REQUESTS_CPU')|default('2', true) }}"
+metering_presto_worker_limits_mem: "{{ lookup('env', 'METERING_PRESTO_WORKER_LIMITS_MEM')|default('2Gi', true) }}"
+metering_presto_worker_limits_cpu: "{{ lookup('env', 'METERING_PRESTO_WORKER_LIMITS_CPU')|default('2', true) }}"
+
+metering_hive_metastore_requests_mem: "{{ lookup('env', 'METERING_HIVE_METASTORE_REQUESTS_MEM')|default('650Mi', true) }}"
+metering_hive_metastore_requests_cpu: "{{ lookup('env', 'METERING_HIVE_METASTORE_REQUESTS_CPU')|default('500m', true) }}"
+metering_hive_metastore_limits_mem: "{{ lookup('env', 'METERING_HIVE_METASTORE_REQUESTS_CPU')|default('650Mi', true) }}"
+metering_hive_metastore_limits_cpu: "{{ lookup('env', 'METERING_HIVE_METASTORE_LIMITS_CPU')|default('500m', true) }}"
+metering_hive_metastore_storage_size: "{{ lookup('env', 'METERING_HIVE_META_SSIZE') | default('5Gi', true) }}"
+
+metering_hive_server_requests_mem: "{{ lookup('env', 'METERING_HIVE_SERVER_REQUESTS_MEM')|default('500Mi', true) }}"
+metering_hive_server_requests_cpu: "{{ lookup('env', 'METERING_HIVE_SERVER_REQUESTS_CPU')|default('100m', true) }}"
+metering_hive_server_limits_mem: "{{ lookup('env', 'METERING_HIVE_SERVER_LIMITS_MEM')|default('500Mi', true) }}"
+metering_hive_server_limits_cpu: "{{ lookup('env', 'METERING_HIVE_SERVER_LIMITS_CPU')|default('100m', true) }}"
+
+metering_hdfs_datanode_replica_count: "{{ lookup('env', 'METERING_HDFS_DATA_REPLICAS') | default(1, true) }}"
+metering_hdfs_datanode_requests_mem: "{{ lookup('env', 'METERING_HDFS_DATANODE_REQUESTS_MEM')|default('250Mi', true) }}"
+metering_hdfs_datanode_requests_cpu: "{{ lookup('env', 'METERING_HDFS_DATANODE_REQUESTS_CPU')|default('250m', true) }}"
+metering_hdfs_datanode_limits_mem: "{{ lookup('env', 'METERING_HDFS_DATANODE_LIMITS_MEM')|default('250Mi', true) }}"
+metering_hdfs_datanode_limits_cpu: "{{ lookup('env', 'METERING_HDFS_DATANODE_LIMITS_CPU')|default('250m', true) }}"
+metering_hdfs_datanode_storage_size: "{{ lookup('env', 'METERING_HDFS_DATA_SSIZE') | default('5Gi', true) }}"
+
+metering_hdfs_namenode_requests_mem: "{{ lookup('env', 'METERING_HDFS_NAMENODE_REQUESTS_MEM')|default('350Mi', true) }}"
+metering_hdfs_namenode_requests_cpu: "{{ lookup('env', 'METERING_HDFS_NAMENODE_REQUESTS_CPU')|default('250m', true) }}"
+metering_hdfs_namenode_limits_mem: "{{ lookup('env', 'METERING_HDFS_NAMENODE_LIMITS_MEM')|default('350Mi', true) }}"
+metering_hdfs_namenode_limits_cpu: "{{ lookup('env', 'METERING_HDFS_NAMENODE_LIMITS_CPU')|default('250m', true) }}"
+metering_hdfs_namenode_storage_size: "{{ lookup('env', 'METERING_HDFS_NAME_SSIZE') | default('5Gi', true) }}"

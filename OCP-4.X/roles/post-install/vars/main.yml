@@ -30,5 +30,5 @@ rhcos_pbench_node_volume_size: "{{ lookup('env', 'RHCOS_PBENCH_NODE_VOLUME_SIZE'
 rhcos_pbench_node_volume_type: "{{ lookup('env', 'RHCOS_PBENCH_NODE_VOLUME_TYPE')|default('gp2', true) }}"
 
 prometheus_retention_period: "{{ lookup('env', 'PROMETHEUS_RETENTION_PERIOD')|default('15d', true) }}"
-prometheus_storage_size: "{{ lookup('env', 'PROMETHEUS_STORAGE_SIZE')|default('50Gi', true) }}"
-alertmanager_storage_size: "{{ lookup('env', 'ALERTMANAGER_STORAGE_SIZE')|default('10Gi', true) }}"
+prometheus_storage_size: "{{ lookup('env', 'PROMETHEUS_STORAGE_SIZE')|default('10Gi', true) }}"
+alertmanager_storage_size: "{{ lookup('env', 'ALERTMANAGER_STORAGE_SIZE')|default('3Gi', true) }}"
